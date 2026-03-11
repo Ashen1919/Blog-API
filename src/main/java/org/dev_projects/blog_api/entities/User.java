@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -45,4 +46,10 @@ public class User {
     protected void onUpdate() {
         updated_at = LocalDateTime.now();
     }
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "author", orphanRemoval = true)
+    private List<Post> posts;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "author", orphanRemoval = true)
+    private List<Comment> comments;
 }
