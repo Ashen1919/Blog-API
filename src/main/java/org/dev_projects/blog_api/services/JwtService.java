@@ -1,5 +1,6 @@
 package org.dev_projects.blog_api.services;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -26,16 +27,24 @@ public class JwtService {
 
     public boolean validateToken(String token) {
         try {
-            var claims = Jwts.parser()
-                    .verifyWith(Keys.hmacShaKeyFor(secret.getBytes()))
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+            var claims = getClaims(token, secret);
 
             return claims.getExpiration().after(new Date());
 
         } catch (JwtException ex){
             return false;
         }
+    }
+
+    public String getEmailFromToken(String token) {
+        return getClaims(token, secret).getSubject();
+    }
+
+    private static Claims getClaims(String token, String secret) {
+        return Jwts.parser()
+                .verifyWith(Keys.hmacShaKeyFor(secret.getBytes()))
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
