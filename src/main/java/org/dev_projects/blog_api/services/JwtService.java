@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.AllArgsConstructor;
 import org.dev_projects.blog_api.configurations.JwtConfig;
+import org.dev_projects.blog_api.entities.Role;
 import org.dev_projects.blog_api.entities.User;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,7 @@ public class JwtService {
                 .subject(String.valueOf(user.getId()))
                 .claim("email", user.getEmail())
                 .claim("name", user.getUsername())
+                .claim("role", user.getRole())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + tokenExpiration))
                 .signWith(jwtConfig.getSecretKey())
@@ -63,5 +65,9 @@ public class JwtService {
 
     public String getEmailFromToken(String token) {
         return getClaims(token, jwtConfig.getSecret()).get("email", String.class);
+    }
+
+    public Role getRoleFromToken(String token) {
+        return Role.valueOf(getClaims(token, jwtConfig.getSecret()).get("role", String.class));
     }
 }
