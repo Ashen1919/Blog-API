@@ -19,6 +19,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 @RestController
 @RequestMapping("/auth")
 @AllArgsConstructor
@@ -47,7 +49,7 @@ public class AuthController {
 
         var cookie = new Cookie("refreshToken",  refreshToken);
         cookie.setHttpOnly(true);
-        cookie.setPath("/auth");
+        cookie.setPath("/auth/refresh");
         cookie.setMaxAge(jwtConfig.getRefreshTokenExpiration()); // 7d
         cookie.setSecure(true);
         response.addCookie(cookie);
@@ -55,20 +57,28 @@ public class AuthController {
         return ResponseEntity.ok(new JwtResponse(accessToken));
     }
 
-    @PostMapping("/validate")
-    public boolean validate(@RequestHeader("Authorization") String authHeader) {
-        System.out.println("Validate Called");
-        var token = authHeader.replace("Bearer ", "");
-        return jwtService.validateToken(token);
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtResponse> refreshToken(
+            @CookieValue("refreshToken") String refreshToken
+    ) {
+        if(!jwtService.validateToken(refreshToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        var userId = jwtService.getUserIdFromToken(refreshToken);
+        var user = userRepository.findById(Math.toIntExact(userId)).orElseThrow();
+        var accessToken = jwtService.generateAccessToken(user);
+
+        return ResponseEntity.ok(new JwtResponse(accessToken));
     }
 
     @GetMapping("/currentUser")
     public ResponseEntity<UserResponseDto>  getCurrentUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         assert authentication != null;
-        var email =(String) authentication.getPrincipal();
-        var user = userRepository.findByEmail(email);
-        if (user.isEmpty()) {
+        var userId =Integer.valueOf((String) Objects.requireNonNull(authentication.getPrincipal()));
+        var user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
             return ResponseEntity.notFound().build();
         }
 

@@ -48,9 +48,6 @@ public class JwtService {
         }
     }
 
-    public String getEmailFromToken(String token) {
-        return getClaims(token, jwtConfig.getSecret()).get("email", String.class);
-    }
 
     private static Claims getClaims(String token, String secret) {
         return Jwts.parser()
@@ -58,5 +55,13 @@ public class JwtService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public Long getUserIdFromToken(String token) {
+        return Long.valueOf(getClaims(token, jwtConfig.getSecret()).getSubject());
+    }
+
+    public String getEmailFromToken(String token) {
+        return getClaims(token, jwtConfig.getSecret()).get("email", String.class);
     }
 }
