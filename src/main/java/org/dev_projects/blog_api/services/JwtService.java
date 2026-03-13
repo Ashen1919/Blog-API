@@ -4,30 +4,42 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.AllArgsConstructor;
+import org.dev_projects.blog_api.configurations.JwtConfig;
+import org.dev_projects.blog_api.entities.User;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
+@AllArgsConstructor
 @Service
 public class JwtService {
-    @Value("${spring.jwt.secret}")
-    private String secret;
+    private final JwtConfig jwtConfig;
 
-    public String generateToken(String email) {
-        final long tokenExpiration = 83600;
+    public String generateAccessToken(User user) {
 
+        return generateToken(user, jwtConfig.getAccessTokenExpiration());
+    }
+
+    public String generateRefreshToken(User user) {
+
+        return generateToken(user, jwtConfig.getRefreshTokenExpiration());
+    }
+
+    private String generateToken(User user, long tokenExpiration) {
         return Jwts.builder()
-                .subject(email)
+                .subject(String.valueOf(user.getId()))
+                .claim("email", user.getEmail())
+                .claim("name", user.getUsername())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + tokenExpiration))
-                .signWith(Keys.hmacShaKeyFor(secret.getBytes()))
+                .signWith(jwtConfig.getSecretKey())
                 .compact();
     }
 
     public boolean validateToken(String token) {
         try {
-            var claims = getClaims(token, secret);
+            var claims = getClaims(token, jwtConfig.getSecret());
 
             return claims.getExpiration().after(new Date());
 
@@ -37,7 +49,7 @@ public class JwtService {
     }
 
     public String getEmailFromToken(String token) {
-        return getClaims(token, secret).getSubject();
+        return getClaims(token, jwtConfig.getSecret()).get("email", String.class);
     }
 
     private static Claims getClaims(String token, String secret) {

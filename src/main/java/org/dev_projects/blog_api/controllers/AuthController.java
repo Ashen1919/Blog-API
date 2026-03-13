@@ -1,7 +1,10 @@
 package org.dev_projects.blog_api.controllers;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.dev_projects.blog_api.configurations.JwtConfig;
 import org.dev_projects.blog_api.dtos.AuthDto.JwtResponse;
 import org.dev_projects.blog_api.dtos.AuthDto.LoginRequestDto;
 import org.dev_projects.blog_api.dtos.userDto.UserResponseDto;
@@ -22,11 +25,15 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final JwtConfig jwtConfig;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+    public ResponseEntity<JwtResponse> login(
+            @Valid @RequestBody LoginRequestDto loginRequestDto,
+            HttpServletResponse response
+    ) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequestDto.getEmail(),
@@ -34,9 +41,18 @@ public class AuthController {
                 )
         );
 
-        var token = jwtService.generateToken(loginRequestDto.getEmail());
+        var user = userRepository.findByEmail(loginRequestDto.getEmail()).orElseThrow();
+        var accessToken = jwtService.generateAccessToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
 
-        return ResponseEntity.ok(new JwtResponse(token));
+        var cookie = new Cookie("refreshToken",  refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/auth");
+        cookie.setMaxAge(jwtConfig.getRefreshTokenExpiration()); // 7d
+        cookie.setSecure(true);
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok(new JwtResponse(accessToken));
     }
 
     @PostMapping("/validate")
