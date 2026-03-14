@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
+                        .requestMatchers("/api/posts/allPosts", "/api/posts/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/auth/currentUser").authenticated()
                         .anyRequest().authenticated()
                 )

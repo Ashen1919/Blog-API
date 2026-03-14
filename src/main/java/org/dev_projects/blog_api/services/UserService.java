@@ -33,7 +33,6 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
 
     // Create a user
     public UserResponseDto createUser(UserRequestDto userRequestDto) {
