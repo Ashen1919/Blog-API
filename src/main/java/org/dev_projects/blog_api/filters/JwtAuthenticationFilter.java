@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.dev_projects.blog_api.services.JwtService;
+import org.dev_projects.blog_api.services.TokenBlackListService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +21,7 @@ import java.util.List;
 @AllArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
+    private final TokenBlackListService tokenBlackListService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -32,6 +34,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         var token =  authHeader.replace("Bearer ", "");
         if(!jwtService.validateToken(token)) {
             filterChain.doFilter(request, response);
+            return;
+        }
+
+        if(tokenBlackListService.isBlacklisted(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token has been invalidated. Please log in again.");
             return;
         }
 
