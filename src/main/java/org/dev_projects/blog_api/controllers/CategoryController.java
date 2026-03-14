@@ -23,22 +23,4 @@ public class CategoryController {
         return  ResponseEntity.ok(categoryService.getAllCategories());
     }
 
-    @PostMapping
-    public ResponseEntity<CategoryResponseDto> createCategory(@Valid @RequestBody CategoryRequestDto categoryRequestDto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.createCategory(categoryRequestDto));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<CategoryResponseDto> updateCategory(
-            @PathVariable int id,
-            @Valid @RequestBody CategoryRequestDto categoryRequestDto
-    ) {
-        return ResponseEntity.ok(categoryService.updateCategory(id, categoryRequestDto));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteCategory(@PathVariable int id) {
-        categoryService.deleteCategory(id);
-        return ResponseEntity.ok(Map.of("message", "Category deleted successfully"));
-    }
 }
