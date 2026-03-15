@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -117,7 +118,7 @@ public class PostService {
         Post existingPost = postRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Post not found with id " + id));
 
-        // Check category is exist
+        // Check category is existed
         if(updatePostRequestDto.getCategoryId() != null) {
             Category category = categoryRepository.findById(updatePostRequestDto.getCategoryId()).orElseThrow(() ->
                     new RuntimeException("Category not found with id " + updatePostRequestDto.getCategoryId()));
@@ -147,4 +148,17 @@ public class PostService {
     }
 
     // Delete post
+    public void deletePost(Long id ,Principal principal) throws AccessDeniedException {
+        int userId = Integer.parseInt(principal.getName());
+
+        Post existingPost = postRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Post not found with id " + id));
+
+        // Check post belongs to the requested user
+        if(existingPost.getAuthor().getId() != userId) {
+            throw new AccessDeniedException("You are not authorized to delete this post");
+        }
+
+        postRepository.delete(existingPost);
+    }
 }

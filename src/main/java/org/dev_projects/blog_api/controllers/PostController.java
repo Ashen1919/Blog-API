@@ -11,7 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -57,5 +59,11 @@ public class PostController {
             @RequestBody UpdatePostRequestDto updatePostRequestDto
     ) {
         return ResponseEntity.ok(postService.updatePost(id, updatePostRequestDto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deletePost(@PathVariable Long id, Principal principal) throws AccessDeniedException {
+        postService.deletePost(id, principal);
+        return ResponseEntity.ok(Map.of("message", "Post has been deleted"));
     }
 }
