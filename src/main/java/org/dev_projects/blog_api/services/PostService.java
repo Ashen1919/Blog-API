@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.dev_projects.blog_api.dtos.PageResponseDto;
 import org.dev_projects.blog_api.dtos.postDto.PostRequestDto;
 import org.dev_projects.blog_api.dtos.postDto.PostResponseDto;
+import org.dev_projects.blog_api.dtos.postDto.UpdatePostRequestDto;
 import org.dev_projects.blog_api.entities.Category;
 import org.dev_projects.blog_api.entities.Post;
 import org.dev_projects.blog_api.entities.Tag;
@@ -23,6 +24,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -85,7 +87,7 @@ public class PostService {
         return modelMapper.map(existingPost, PostResponseDto.class);
     }
 
-    // Get post By user id
+    // Get post By author
     public PageResponseDto<PostResponseDto> getPostByAuthor(int page, int size, Principal principal) {
         Integer userId = Integer.valueOf(principal.getName());
         User author = userRepository.findById(userId)
@@ -108,4 +110,41 @@ public class PostService {
                 postPage.isLast()
         );
     }
+
+    // Update posts
+    public PostResponseDto updatePost(Long id ,UpdatePostRequestDto updatePostRequestDto) {
+        // Check post is exist
+        Post existingPost = postRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Post not found with id " + id));
+
+        // Check category is exist
+        if(updatePostRequestDto.getCategoryId() != null) {
+            Category category = categoryRepository.findById(updatePostRequestDto.getCategoryId()).orElseThrow(() ->
+                    new RuntimeException("Category not found with id " + updatePostRequestDto.getCategoryId()));
+
+            existingPost.setCategory(category);
+        }
+
+        // Check title is exist
+        if(updatePostRequestDto.getTitle() != null) {
+            existingPost.setTitle(updatePostRequestDto.getTitle());
+        }
+
+        // Check content is exist
+        if(updatePostRequestDto.getContent() != null) {
+            existingPost.setContent(updatePostRequestDto.getContent());
+        }
+
+        // Check tags are exist
+        if(updatePostRequestDto.getTagIds() != null && !updatePostRequestDto.getTagIds().isEmpty()) {
+            List<Tag> tags = tagRepository.findAllById(updatePostRequestDto.getTagIds());
+            existingPost.setTags(tags);
+        }
+
+        existingPost.setUpdatedAt(LocalDateTime.now());
+
+        return modelMapper.map(postRepository.save(existingPost), PostResponseDto.class);
+    }
+
+    // Delete post
 }

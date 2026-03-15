@@ -5,13 +5,13 @@ import lombok.RequiredArgsConstructor;
 import org.dev_projects.blog_api.dtos.PageResponseDto;
 import org.dev_projects.blog_api.dtos.postDto.PostRequestDto;
 import org.dev_projects.blog_api.dtos.postDto.PostResponseDto;
+import org.dev_projects.blog_api.dtos.postDto.UpdatePostRequestDto;
 import org.dev_projects.blog_api.services.PostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -48,5 +48,14 @@ public class PostController {
             Principal principal
     ) {
         return ResponseEntity.ok(postService.getPostByAuthor(page, size, principal));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<PostResponseDto> updatePost(
+            @Valid
+            @PathVariable Long id,
+            @RequestBody UpdatePostRequestDto updatePostRequestDto
+    ) {
+        return ResponseEntity.ok(postService.updatePost(id, updatePostRequestDto));
     }
 }
