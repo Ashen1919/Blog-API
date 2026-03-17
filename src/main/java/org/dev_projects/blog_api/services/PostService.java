@@ -16,6 +16,8 @@ import org.dev_projects.blog_api.repositories.PostRepository;
 import org.dev_projects.blog_api.repositories.TagRepository;
 import org.dev_projects.blog_api.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +41,7 @@ public class PostService {
     private final TagRepository tagRepository;
 
     // Create a post
+    @CacheEvict(value = {"posts_all", "posts_by_id", "posts_by_user"}, allEntries = true)
     public PostResponseDto createPost(PostRequestDto postRequestDto, Principal principal) {
         Integer userId = Integer.valueOf(principal.getName());
         User author = userRepository.findById(userId).orElseThrow(() ->
@@ -61,6 +64,7 @@ public class PostService {
     }
 
     // Get all posts
+    @Cacheable(value = "posts_all", key = "#page + '_' + #size")
     public PageResponseDto<PostResponseDto> getAllPosts(int page, int size) {
         Pageable pageable =  PageRequest.of(page, size, Sort.by("id").ascending());
         Page<Post> postPage = postRepository.findAll(pageable);
@@ -81,6 +85,7 @@ public class PostService {
     }
 
     // Get post by ID
+    @Cacheable(value = "posts_by_id", key = "#id")
     public PostResponseDto getPostById(Long id) {
         Post existingPost =  postRepository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Post not found with id " + id));
@@ -89,6 +94,7 @@ public class PostService {
     }
 
     // Get post By author
+    @Cacheable(value = "posts_by_user", key = "#principal.name + '_' + #page + '_' + #size")
     public PageResponseDto<PostResponseDto> getPostByAuthor(int page, int size, Principal principal) {
         Integer userId = Integer.valueOf(principal.getName());
         User author = userRepository.findById(userId)
@@ -113,6 +119,7 @@ public class PostService {
     }
 
     // Update posts
+    @CacheEvict(value = {"posts_all", "posts_by_id", "posts_by_user"}, allEntries = true)
     public PostResponseDto updatePost(Long id ,UpdatePostRequestDto updatePostRequestDto) {
         // Check post is exist
         Post existingPost = postRepository.findById(id).orElseThrow(() ->
@@ -148,6 +155,7 @@ public class PostService {
     }
 
     // Delete post
+    @CacheEvict(value = {"posts_all", "posts_by_id", "posts_by_user"}, allEntries = true)
     public void deletePost(Long id ,Principal principal) throws AccessDeniedException {
         int userId = Integer.parseInt(principal.getName());
 

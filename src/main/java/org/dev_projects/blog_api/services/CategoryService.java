@@ -8,6 +8,8 @@ import org.dev_projects.blog_api.entities.Category;
 import org.dev_projects.blog_api.exceptions.ResourceNotFoundException;
 import org.dev_projects.blog_api.repositories.CategoryRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,7 @@ public class CategoryService {
     private final ModelMapper modelMapper;
 
     // Get all categories
+    @Cacheable(value = "categories", key = "'all")
     public List<CategoryResponseDto>  getAllCategories() {
         return categoryRepository.findAll()
                 .stream()
@@ -29,6 +32,7 @@ public class CategoryService {
     }
 
     // Create category
+    @CacheEvict(value = "categories" , key = "'all'")
     public CategoryResponseDto createCategory(CategoryRequestDto categoryRequestDto) {
         Category category = modelMapper.map(categoryRequestDto, Category.class);
         Category savedCategory = categoryRepository.save(category);
@@ -36,6 +40,7 @@ public class CategoryService {
     }
 
     // Update a category
+    @CacheEvict(value = "categories" , allEntries = true)
     public CategoryResponseDto updateCategory(int id, CategoryRequestDto categoryRequestDto) {
         Category existingCategory = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id " + id));
@@ -45,6 +50,7 @@ public class CategoryService {
     }
 
     // Delete a category
+    @CacheEvict(value = "categories" , allEntries = true)
     public void deleteCategory(int id) {
         Category existingCategory = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id " + id));
