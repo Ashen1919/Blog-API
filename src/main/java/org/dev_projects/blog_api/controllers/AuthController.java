@@ -20,6 +20,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.HttpHeaders;
 
 import java.util.Objects;
 
@@ -46,16 +48,19 @@ public class AuthController {
                 )
         );
 
-        var user = userRepository.findByEmail(loginRequestDto.getEmail()).orElseThrow();
-        var accessToken = jwtService.generateAccessToken(user);
+        var user         = userRepository.findByEmail(loginRequestDto.getEmail()).orElseThrow();
+        var accessToken  = jwtService.generateAccessToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
 
-        var cookie = new Cookie("refreshToken",  refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/auth/refresh");
-        cookie.setMaxAge(jwtConfig.getRefreshTokenExpiration()); // 7d
-        cookie.setSecure(true);
-        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/auth/refresh")
+                .maxAge(jwtConfig.getRefreshTokenExpiration())
+                .sameSite("None")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok(new JwtResponse(accessToken));
     }
@@ -97,31 +102,34 @@ public class AuthController {
     public ResponseEntity<String> logout(
             HttpServletRequest request,
             HttpServletResponse response,
-            @CookieValue(value = "refreshToken", required = false)  String refreshToken
+            @CookieValue(value = "refreshToken", required = false) String refreshToken
     ) {
         String bearerToken = request.getHeader("Authorization");
 
-        if(bearerToken == null || !bearerToken.startsWith("Bearer ")) {
+        if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization Token");
         }
         String token = bearerToken.replace("Bearer ", "");
 
-        if(!jwtService.validateToken(token)) {
+        if (!jwtService.validateToken(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired Authorization Token");
         }
 
         tokenBlackListService.blacklistToken(token);
 
-        if(refreshToken != null && jwtService.validateToken(refreshToken)) {
+        if (refreshToken != null && jwtService.validateToken(refreshToken)) {
             tokenBlackListService.blacklistToken(refreshToken);
         }
 
-        Cookie expiredCookie = new Cookie("refreshToken",  "");
-        expiredCookie.setHttpOnly(true);
-        expiredCookie.setPath("/auth/refresh");
-        expiredCookie.setMaxAge(0);
-        expiredCookie.setSecure(true);
-        response.addCookie(expiredCookie);
+        ResponseCookie expiredCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/auth/refresh")
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, expiredCookie.toString());
 
         return ResponseEntity.ok("Successfully logged out");
     }

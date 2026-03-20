@@ -2,7 +2,7 @@ CREATE TABLE users
 (
     id         INT AUTO_INCREMENT NOT NULL,
     username   VARCHAR(100)       NOT NULL,
-    password   VARCHAR(50)        NOT NULL, # should be varchar(100)
+    password   VARCHAR(50)        NOT NULL,
     email      VARCHAR(255)       NOT NULL,
     `role`     VARCHAR(50)        NOT NULL,
     created_at datetime           NOT NULL,
