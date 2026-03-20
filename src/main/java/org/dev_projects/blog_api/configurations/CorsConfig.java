@@ -14,6 +14,7 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.addAllowedOrigin("https://inkwave-blog.vercel.app");
+        corsConfiguration.addAllowedOrigin("https://portfolio-blog-admin-nine.vercel.app");
         corsConfiguration.setAllowedHeaders(Arrays.asList("Authorization", "X-Requested-With", "Content-Type"));
         corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH"));
 
