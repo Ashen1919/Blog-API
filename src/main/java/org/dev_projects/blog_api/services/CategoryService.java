@@ -23,7 +23,7 @@ public class CategoryService {
     private final ModelMapper modelMapper;
 
     // Get all categories
-    @Cacheable(value = "categories", key = "'all")
+    @Cacheable(value = "categories", key = "'all'")
     public List<CategoryResponseDto>  getAllCategories() {
         return categoryRepository.findAll()
                 .stream()
