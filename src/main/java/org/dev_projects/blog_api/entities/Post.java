@@ -23,7 +23,7 @@ public class Post {
     @Column(name = "title", nullable = false, length = 100)
     private String title;
 
-    @Column(name = "content", columnDefinition = "TEXT")
+    @Column(name = "content", columnDefinition = "MEDIUMTEXT")
     private String content;
 
     @JoinColumn(name = "author_id", nullable = false)
