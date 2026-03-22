@@ -3,6 +3,7 @@ package org.dev_projects.blog_api.controllers;
 import lombok.RequiredArgsConstructor;
 import org.dev_projects.blog_api.services.CloudinaryService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ import java.util.Map;
 public class UploadController {
     private final CloudinaryService cloudinaryService;
 
+    @PostMapping
     public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
         String url = cloudinaryService.uploadImage(file);
         return ResponseEntity.ok(Map.of("url", url));
