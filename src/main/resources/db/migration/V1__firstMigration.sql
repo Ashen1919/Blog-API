@@ -1,79 +1,82 @@
+-- USERS
 CREATE TABLE users
 (
-    id         INT AUTO_INCREMENT NOT NULL,
-    username   VARCHAR(100)       NOT NULL,
-    password   VARCHAR(50)        NOT NULL,
-    email      VARCHAR(255)       NOT NULL,
-    `role`     VARCHAR(50)        NOT NULL,
-    created_at datetime           NOT NULL,
-    updated_at datetime           NULL,
-    CONSTRAINT pk_users PRIMARY KEY (id)
+    id         SERIAL PRIMARY KEY,
+    username   VARCHAR(100) NOT NULL,
+    password   VARCHAR(50)  NOT NULL,
+    email      VARCHAR(255) NOT NULL UNIQUE,
+    role       VARCHAR(50)  NOT NULL DEFAULT 'user',
+    created_at TIMESTAMP    NOT NULL,
+    updated_at TIMESTAMP
 );
 
-ALTER TABLE users
-    ADD CONSTRAINT uc_users_email UNIQUE (email);
-
+-- CATEGORY
 CREATE TABLE category
 (
-    id   INT AUTO_INCREMENT NOT NULL,
-    name VARCHAR(100)       NOT NULL,
-    CONSTRAINT pk_category PRIMARY KEY (id)
+    id   SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
 );
 
+-- TAGS
+CREATE TABLE tags
+(
+    id   BIGSERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- POSTS
+CREATE TABLE posts
+(
+    id          BIGSERIAL PRIMARY KEY,
+    title       VARCHAR(100) NOT NULL,
+    content     TEXT,
+    author_id   INT NOT NULL,
+    created_at  TIMESTAMP NOT NULL,
+    updated_at  TIMESTAMP,
+    category_id INT
+);
+
+-- COMMENTS
+CREATE TABLE comments
+(
+    id         BIGSERIAL PRIMARY KEY,
+    content    TEXT NOT NULL,
+    post_id    BIGINT NOT NULL,
+    author_id  INT NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+
+-- POST_TAGS (many-to-many)
 CREATE TABLE post_tags
 (
     post_id BIGINT NOT NULL,
     tag_id  BIGINT NOT NULL
 );
 
-CREATE TABLE tags
-(
-    id   BIGINT AUTO_INCREMENT NOT NULL,
-    name VARCHAR(50)           NOT NULL,
-    CONSTRAINT pk_tags PRIMARY KEY (id)
-);
-
-ALTER TABLE tags
-    ADD CONSTRAINT uc_tags_name UNIQUE (name);
-
-CREATE TABLE posts
-(
-    id          BIGINT AUTO_INCREMENT NOT NULL,
-    title       VARCHAR(100)          NOT NULL,
-    content     TEXT                  NULL,
-    author_id   INT                   NOT NULL,
-    created_at  datetime              NOT NULL,
-    updated_at  datetime              NULL,
-    category_id INT                   NULL,
-    CONSTRAINT pk_posts PRIMARY KEY (id)
-);
+-- =========================
+-- FOREIGN KEYS
+-- =========================
 
 ALTER TABLE posts
-    ADD CONSTRAINT FK_POSTS_ON_AUTHOR FOREIGN KEY (author_id) REFERENCES users (id);
+    ADD CONSTRAINT fk_posts_author
+    FOREIGN KEY (author_id) REFERENCES users (id);
 
 ALTER TABLE posts
-    ADD CONSTRAINT FK_POSTS_ON_CATEGORY FOREIGN KEY (category_id) REFERENCES category (id);
-
-ALTER TABLE post_tags
-    ADD CONSTRAINT fk_post_tags_on_post FOREIGN KEY (post_id) REFERENCES posts (id);
-
-ALTER TABLE post_tags
-    ADD CONSTRAINT fk_post_tags_on_tag FOREIGN KEY (tag_id) REFERENCES tags (id);
-
-CREATE TABLE comments
-(
-    id         BIGINT AUTO_INCREMENT NOT NULL,
-    content    TEXT                  NOT NULL,
-    post_id    BIGINT                NOT NULL,
-    author_id  INT                   NOT NULL,
-    created_at datetime              NOT NULL,
-    CONSTRAINT pk_comments PRIMARY KEY (id)
-);
+    ADD CONSTRAINT fk_posts_category
+    FOREIGN KEY (category_id) REFERENCES category (id);
 
 ALTER TABLE comments
-    ADD CONSTRAINT FK_COMMENTS_ON_AUTHOR FOREIGN KEY (author_id) REFERENCES users (id);
+    ADD CONSTRAINT fk_comments_author
+    FOREIGN KEY (author_id) REFERENCES users (id);
 
 ALTER TABLE comments
-    ADD CONSTRAINT FK_COMMENTS_ON_POST FOREIGN KEY (post_id) REFERENCES posts (id);
+    ADD CONSTRAINT fk_comments_post
+    FOREIGN KEY (post_id) REFERENCES posts (id);
 
+ALTER TABLE post_tags
+    ADD CONSTRAINT fk_post_tags_post
+    FOREIGN KEY (post_id) REFERENCES posts (id);
 
+ALTER TABLE post_tags
+    ADD CONSTRAINT fk_post_tags_tag
+    FOREIGN KEY (tag_id) REFERENCES tags (id);
