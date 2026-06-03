@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers(HttpMethod.GET, "/health").permitAll()
+                        .requestMatchers( "/actuator/health").permitAll()
                         .requestMatchers("/api/posts/allPosts").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/posts/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/auth/currentUser").authenticated()
