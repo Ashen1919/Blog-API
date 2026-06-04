@@ -1,82 +1,60 @@
 -- USERS
 CREATE TABLE users
 (
-    id         SERIAL PRIMARY KEY,
+    id         INT AUTO_INCREMENT PRIMARY KEY,
     username   VARCHAR(100) NOT NULL,
-    password   VARCHAR(100)  NOT NULL,
+    password   VARCHAR(100) NOT NULL,
     email      VARCHAR(255) NOT NULL UNIQUE,
     role       VARCHAR(50)  NOT NULL DEFAULT 'user',
     created_at TIMESTAMP    NOT NULL,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP    NULL
 );
 
 -- CATEGORY
 CREATE TABLE category
 (
-    id   SERIAL PRIMARY KEY,
+    id   INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL
 );
 
 -- TAGS
 CREATE TABLE tags
 (
-    id   BIGSERIAL PRIMARY KEY,
+    id   BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
 -- POSTS
 CREATE TABLE posts
 (
-    id          BIGSERIAL PRIMARY KEY,
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     title       VARCHAR(100) NOT NULL,
     content     TEXT,
-    author_id   INT NOT NULL,
-    created_at  TIMESTAMP NOT NULL,
-    updated_at  TIMESTAMP,
-    category_id INT
+    author_id   INT          NOT NULL,
+    created_at  TIMESTAMP    NOT NULL,
+    updated_at  TIMESTAMP    NULL,
+    category_id INT          NULL,
+    CONSTRAINT fk_posts_author   FOREIGN KEY (author_id)   REFERENCES users (id),
+    CONSTRAINT fk_posts_category FOREIGN KEY (category_id) REFERENCES category (id)
 );
 
 -- COMMENTS
 CREATE TABLE comments
 (
-    id         BIGSERIAL PRIMARY KEY,
-    content    TEXT NOT NULL,
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content    TEXT   NOT NULL,
     post_id    BIGINT NOT NULL,
-    author_id  INT NOT NULL,
-    created_at TIMESTAMP NOT NULL
+    author_id  INT    NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT fk_comments_post   FOREIGN KEY (post_id)   REFERENCES posts (id),
+    CONSTRAINT fk_comments_author FOREIGN KEY (author_id) REFERENCES users (id)
 );
 
 -- POST_TAGS (many-to-many)
 CREATE TABLE post_tags
 (
     post_id BIGINT NOT NULL,
-    tag_id  BIGINT NOT NULL
+    tag_id  BIGINT NOT NULL,
+    CONSTRAINT fk_post_tags_post FOREIGN KEY (post_id) REFERENCES posts (id),
+    CONSTRAINT fk_post_tags_tag  FOREIGN KEY (tag_id)  REFERENCES tags (id)
 );
-
--- =========================
--- FOREIGN KEYS
--- =========================
-
-ALTER TABLE posts
-    ADD CONSTRAINT fk_posts_author
-    FOREIGN KEY (author_id) REFERENCES users (id);
-
-ALTER TABLE posts
-    ADD CONSTRAINT fk_posts_category
-    FOREIGN KEY (category_id) REFERENCES category (id);
-
-ALTER TABLE comments
-    ADD CONSTRAINT fk_comments_author
-    FOREIGN KEY (author_id) REFERENCES users (id);
-
-ALTER TABLE comments
-    ADD CONSTRAINT fk_comments_post
-    FOREIGN KEY (post_id) REFERENCES posts (id);
-
-ALTER TABLE post_tags
-    ADD CONSTRAINT fk_post_tags_post
-    FOREIGN KEY (post_id) REFERENCES posts (id);
-
-ALTER TABLE post_tags
-    ADD CONSTRAINT fk_post_tags_tag
-    FOREIGN KEY (tag_id) REFERENCES tags (id);
